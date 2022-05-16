@@ -1,3 +1,6 @@
+from threading import Thread
+
+import yfinance as yfinance
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
@@ -61,15 +64,14 @@ class StockView(GridLayout):
         ------------------------------------------
         Label   Tickereingabe               Zufügen
         '''
-        # first row
-        self.stock_view = ScrollView(size_hint=(1, 0.9),
+        # Label für Nachrichten einfügen
+        self.message = Label(size_hint=(1, 0.1))
+        self.add_widget(self.message)
+        # second row
+        self.stock_view = ScrollView(size_hint=(1, None),
+                                     size=(Window.width, Window.height * 0.8),
                                      do_scroll_x=False,
                                      do_scroll_y=True)
-        # 4 Spalten für die Darstellung
-        # Die Breite soll alles sein, was wir zur Verfügung haben - also 1
-        # Die Höhe ist nicht gesetzt, wir fügen ja immer Elemente dazu
-        # Aber mindestens die minimale Höhe
-        # Eine Zeile soll eine Höhe von 30 haben und forciert werden.
         self.stock_list = GridLayout(cols=4,
                                      size_hint=(1, None),
                                      height=self.minimum_height,
@@ -77,8 +79,8 @@ class StockView(GridLayout):
                                      row_force_default=True)
         self.stock_view.add_widget(self.stock_list)
         self.add_widget(self.stock_view)
-        # second row
-        self.stock_add = GridLayout(cols=3, size_hint=(1, 0.1))
+        # third row
+        self.stock_add = GridLayout(cols=3, size_hint=(1, 0.15))
         self.add_widget(self.stock_add)
         self.ticker_text = Label(text='Symbol/Ticker:',
                                  size_hint_x=0.2,
@@ -98,20 +100,32 @@ class StockView(GridLayout):
         self.stock_add.add_widget(self.ticker_add)
 
     def add_ticker_symbol(self, *args):
-        # Später müssen wir die richtigen Daten abfragen
-        # Jetzt helfen uns erstmal ein paar Dummy Daten für das Layout
-        dummy_data = {
-            'ticker': 'MSF.DE',
-            'name': 'Microsoft',
-            'price': '99,42 €'
-        }
-        # Das zufügen lagern wir gleich in eine eigene Funktion aus
-        self.add_ticker_row(dummy_data['ticker'], dummy_data['name'], dummy_data['price'])
+        # wir fragen eine externe API ab
+        # Daher ist es nicht schlecht den Benutzer zu informieren, dass etwas
+        # im Hintergrund passiert
+        self.message.text = 'Bitte warten, während die Daten abgefragt werden...'
+        query_data_thread = Thread(target=self.query_stock_data)
+        query_data_thread.start()
 
-    # Funktion zum zufügen einer Aktien Zeile
+    def query_stock_data(self):
+        # Jetzt müssen wir die richtigen Daten für den eingegebenen Ticker
+        # noch von Yahoo Finance abfragen
+        symbol = self.ticker_input.text.strip()
+        stock = yfinance.Ticker(ticker=symbol)
+        # Davon interessiert uns nur das info Objekt
+        data = stock.info
+        if 'regularMarketPrice' in data and data.get('regularMarketPrice') is not None:
+            # aus dem Info Objekt können wir uns jetzt die Daten zusammen bauen
+            # msf.de
+            price = f'{data.get("regularMarketPrice"):.2f} {data.get("currency")}'
+            self.add_ticker_row(data.get('symbol'), data.get('longName'), price)
+        else:
+            # Fehlermeldung, falls kein Preis gefunden werden konnte
+            self.message.text = f'Für das angegebene Symbol {symbol} gab es kein Ergebnis.'
+
     def add_ticker_row(self, ticker, name, price):
-        # Wir wollen nur die Breite der Darstellung für jedes Feld anpassen
-        # Die höhe wird durch das Gridlayout gegeben
+        # Die Daten sind geladen - wir können die Nachricht entfernen
+        self.message.text = ''
         ticker = Label(text=ticker, size_hint_x=0.2)
         self.stock_list.add_widget(ticker)
         name = Label(text=name, size_hint_x=0.4)
