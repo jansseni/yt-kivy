@@ -8,8 +8,10 @@ Die Preise werden im Hintergrund abgefragt.
 - https://www.youtube.com/watch?v=6XoNpA_oYdw
 - https://www.youtube.com/watch?v=lVrfVSBhrcY
 - https://www.youtube.com/watch?v=LWvciPA0Cmw
+- https://www.youtube.com/watch?v=vrMkD2VknTY
 
 ## Blogposts
 - https://ingo-janssen.de/python-gui-mit-kivy-erste-schritte-mit-fenstern-und-grafischen-oberflaechen/
 - https://ingo-janssen.de/python-gui-mit-kivy-den-benutzer-willkommen-heissen/
 - https://ingo-janssen.de/python-gui-mit-kivy-die-verpackung-zahlt-styling/
+- https://ingo-janssen.de/python-gui-mit-kivy-weitere-ansichten-views/
