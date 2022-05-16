@@ -1,3 +1,4 @@
+from functools import partial
 from threading import Thread
 
 import yfinance as yfinance
@@ -100,31 +101,26 @@ class StockView(GridLayout):
         self.stock_add.add_widget(self.ticker_add)
 
     def add_ticker_symbol(self, *args):
-        # wir fragen eine externe API ab
-        # Daher ist es nicht schlecht den Benutzer zu informieren, dass etwas
-        # im Hintergrund passiert
         self.message.text = 'Bitte warten, während die Daten abgefragt werden...'
         query_data_thread = Thread(target=self.query_stock_data)
         query_data_thread.start()
 
     def query_stock_data(self):
-        # Jetzt müssen wir die richtigen Daten für den eingegebenen Ticker
-        # noch von Yahoo Finance abfragen
         symbol = self.ticker_input.text.strip()
         stock = yfinance.Ticker(ticker=symbol)
-        # Davon interessiert uns nur das info Objekt
         data = stock.info
         if 'regularMarketPrice' in data and data.get('regularMarketPrice') is not None:
-            # aus dem Info Objekt können wir uns jetzt die Daten zusammen bauen
             # msf.de
             price = f'{data.get("regularMarketPrice"):.2f} {data.get("currency")}'
-            self.add_ticker_row(data.get('symbol'), data.get('longName'), price)
+            # Das Zufügen der Daten zum Screen muss mit Clock einmal ausgelagert werden.
+            # Damit passiert der Zugriff dann wieder über Kivy und nicht von außerhalb.
+            # https://kivy.org/doc/stable/api-kivy.clock.html?highlight=clock
+            Clock.schedule_once(partial(self.add_ticker_row, data.get('symbol'), data.get('longName'), price), 0.5)
         else:
-            # Fehlermeldung, falls kein Preis gefunden werden konnte
             self.message.text = f'Für das angegebene Symbol {symbol} gab es kein Ergebnis.'
 
-    def add_ticker_row(self, ticker, name, price):
-        # Die Daten sind geladen - wir können die Nachricht entfernen
+    # *args wird benötigt, weil Clock den timeout für die Ausführung mit übergibt
+    def add_ticker_row(self, ticker, name, price, *args):
         self.message.text = ''
         ticker = Label(text=ticker, size_hint_x=0.2)
         self.stock_list.add_widget(ticker)

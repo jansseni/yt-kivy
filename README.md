@@ -11,6 +11,7 @@ Die Preise werden im Hintergrund abgefragt.
 - https://www.youtube.com/watch?v=vrMkD2VknTY
 - https://www.youtube.com/watch?v=opY8mFV5xg4
 - https://www.youtube.com/watch?v=NSTib5v-Ils
+- https://www.youtube.com/watch?v=QEo9Id9ecgc
 
 ## Blogposts
 - https://ingo-janssen.de/python-gui-mit-kivy-erste-schritte-mit-fenstern-und-grafischen-oberflaechen/
@@ -19,3 +20,4 @@ Die Preise werden im Hintergrund abgefragt.
 - https://ingo-janssen.de/python-gui-mit-kivy-weitere-ansichten-views/
 - https://ingo-janssen.de/python-gui-mit-kivy-scrollbare-liste-mit-aktien-daten/
 - https://ingo-janssen.de/python-gui-mit-kivy-aktiendaten-api-anbinden-yfinance/
+- https://ingo-janssen.de/python-gui-mit-kivy-instruction-outside-the-main-kivy-thread/
