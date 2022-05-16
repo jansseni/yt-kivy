@@ -133,7 +133,10 @@ class StockView(GridLayout):
         self.stock_list.add_widget(delete)
 
     def remove_ticker_row(self, *args):
-        print('Aktien entfernen')
+        row = [element for element in args[0].parent.children if element.y == args[0].y]
+
+        for element in row:
+            self.stock_list.remove_widget(element)
 
 
 class MyApp(App):
