@@ -5,6 +5,7 @@ import yfinance as yfinance
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.storage.jsonstore import JsonStore
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
@@ -100,43 +101,58 @@ class StockView(GridLayout):
         self.ticker_add.bind(on_press=self.add_ticker_symbol)
         self.stock_add.add_widget(self.ticker_add)
 
+        # introduce the store end pre fill the view
+        store = JsonStore('watchlist.json')
+        for item in store:
+            self.query_stock_data(item)
+
     def add_ticker_symbol(self, *args):
         self.message.text = 'Bitte warten, während die Daten abgefragt werden...'
         query_data_thread = Thread(target=self.query_stock_data)
         query_data_thread.start()
 
-    def query_stock_data(self):
-        symbol = self.ticker_input.text.strip()
-        stock = yfinance.Ticker(ticker=symbol)
-        data = stock.info
-        if 'regularMarketPrice' in data and data.get('regularMarketPrice') is not None:
-            # msf.de
-            price = f'{data.get("regularMarketPrice"):.2f} {data.get("currency")}'
-            # Das Zufügen der Daten zum Screen muss mit Clock einmal ausgelagert werden.
-            # Damit passiert der Zugriff dann wieder über Kivy und nicht von außerhalb.
-            # https://kivy.org/doc/stable/api-kivy.clock.html?highlight=clock
-            Clock.schedule_once(partial(self.add_ticker_row, data.get('symbol'), data.get('longName'), price), 0.5)
+    def query_stock_data(self, symbol=None):
+        # symbol = symbol or self.ticker_input.text.strip()
+        # check if symbol already in list
+        store = JsonStore('watchlist.json')
+        if not symbol and self.ticker_input.text.strip().upper() in store:
+            self.message.text = 'Das Symbol ist bereits in der Liste.'
         else:
-            self.message.text = f'Für das angegebene Symbol {symbol} gab es kein Ergebnis.'
+            symbol = symbol or self.ticker_input.text.strip()
+            stock = yfinance.Ticker(ticker=symbol)
+            data = stock.info
+            if 'regularMarketPrice' in data and data.get('regularMarketPrice') is not None:
+                price = f'{data.get("regularMarketPrice"):.2f} {data.get("currency")}'
+                Clock.schedule_once(partial(self.add_ticker_row, data.get('symbol'), data.get('longName'), price), 0.5)
+            else:
+                self.message.text = f'Für das angegebene Symbol {symbol} gab es kein Ergebnis.'
 
-    # *args wird benötigt, weil Clock den timeout für die Ausführung mit übergibt
-    def add_ticker_row(self, ticker, name, price, *args):
+    def add_ticker_row(self, symbol, name, price, *args):
         self.message.text = ''
-        ticker = Label(text=ticker, size_hint_x=0.2)
+        ticker = Label(text=symbol, size_hint_x=0.2)
         self.stock_list.add_widget(ticker)
         name = Label(text=name, size_hint_x=0.4)
         self.stock_list.add_widget(name)
         price = Label(text=price, size_hint_x=0.2)
         self.stock_list.add_widget(price)
         delete = Button(text='Entfernen', size_hint_x=0.2)
-        delete.bind(on_press=self.remove_ticker_row)
+        # add symbol to delete function
+        delete.bind(on_press=partial(self.remove_ticker_row, symbol))
         self.stock_list.add_widget(delete)
 
-    def remove_ticker_row(self, *args):
+        # add the symbol to the store
+        store = JsonStore('watchlist.json')
+        store.put(symbol)
+
+    def remove_ticker_row(self, symbol, *args):
         row = [element for element in args[0].parent.children if element.y == args[0].y]
 
         for element in row:
             self.stock_list.remove_widget(element)
+
+        # delete symbol from store
+        store = JsonStore('watchlist.json')
+        store.delete(symbol)
 
 
 class MyApp(App):

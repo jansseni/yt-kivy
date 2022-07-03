@@ -22,3 +22,4 @@ Die Preise werden im Hintergrund abgefragt.
 - https://ingo-janssen.de/python-gui-mit-kivy-aktiendaten-api-anbinden-yfinance/
 - https://ingo-janssen.de/python-gui-mit-kivy-instruction-outside-the-main-kivy-thread/
 - https://ingo-janssen.de/element-aus-dem-layout-entfernen-python-gui-mit-kivy/
+- https://ingo-janssen.de/aktien-in-der-watchlist-speichern-python-gui-mit-kivy/
